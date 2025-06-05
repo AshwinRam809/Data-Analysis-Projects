@@ -1,0 +1,244 @@
+---
+title: "MTH 404 R Project -- some code"
+date: "2023-04-12"
+output:
+  pdf_document: default
+  world_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Loading Packages
+
+```{r}
+library(tidyverse)
+library(corrplot)
+library(ggplot2)
+library(lubridate)
+library(gridExtra)
+library(caTools)
+library(GGally)
+```
+
+## Reading Data
+
+```{r}
+mydata=read.csv("/Users/ashwinram/Documents/MATLAB/train.csv")
+test_data = read.csv("/Users/ashwinram/Documents/MATLAB/test.csv")
+```
+
+Data structure and summary statistics
+```{r}
+str(mydata)
+summary(mydata)
+```
+
+Removing Qualitative Variables
+
+```{r echo = T, results = 'hide'}
+len = length(mydata[1,])
+counter = 0
+while(counter != len){
+  for (x in 1:len) {
+    eval.parent(substitute(counter <- counter + 1))
+    if(counter == length(mydata[1,]) + 1){
+      counter = len
+      break
+    }
+    if(sapply(mydata[1,x],class) == "character"){
+      counter = 0
+      mydata = mydata[,-x]
+      print(x)
+      print(mydata[,-x])
+      break
+    }
+  }
+}
+len = length(test_data[1,])
+counter = 0
+while(counter != len){
+  for (x in 1:len) {
+    eval.parent(substitute(counter <- counter + 1))
+    if(counter == length(test_data[1,]) + 1){
+      counter = len
+      break
+    }
+    if(sapply(test_data[1,x],class) == "character"){
+      counter = 0
+      test_data = test_data[,-x]
+      print(x)
+      print(test_data[,-x])
+      break
+    }
+  }
+}
+len = length(test_data[1,])
+for(x in test_data[,1]){
+  for(y in 1:len){
+    if(is.na(test_data[x,y])){
+      test_data[x,y] = 0
+    }  
+  }
+}
+```
+
+Replacing NA Values with 0
+
+```{r}
+len = length(mydata[1,])
+for(x in mydata[,1]){
+  for(y in 1:len){
+    if(is.na(mydata[x,y])){
+      mydata[x,y] = 0
+    }  
+  }
+}
+len = length(test_data[1,])
+
+```
+
+## Data visualization 
+
+Check the distribution of the target variable SalePrice
+
+```{r}
+boxplot(mydata$SalePrice)
+hist (mydata$SalePrice)
+```
+
+### Determining the association between variables.
+
+We take out the correlation plot (corrplot) to understand the association of the dependent variable (price) with the independent variables.
+* numerical variable only
+
+```{r}
+cor_data=data.frame(mydata[,2:38])
+correlation=cor(cor_data)
+par(mfrow=c(1, 1))
+corrplot(correlation,method="color")
+```
+
+Graphing scatter plots of the variables that highly correlated to the SalePrice
+
+```{r echo = T, results = 'hide'}
+P1 = ggplot(data = mydata, aes(x = YearBuilt, y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P2 = ggplot(data = mydata, aes(x = YearRemodAdd, y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P4 = ggplot(data = mydata, aes(x = BsmtUnfSF, y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P5 = ggplot(data = mydata, aes(x = TotalBsmtSF, y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P6 = ggplot(data = mydata, aes(x = GrLivArea, y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P11 = ggplot(data = mydata, aes(x = GarageArea, y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P12 = ggplot(data = mydata, aes(x = LotArea, y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P13 = ggplot(data = mydata, aes(x = X1stFlrSF , y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P14 = ggplot(data = mydata, aes(x = X2ndFlrSF , y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P15 = ggplot(data = mydata, aes(x =BsmtFinSF1 , y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P18 = ggplot(data = mydata, aes(x =WoodDeckSF , y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+P19 = ggplot(data = mydata, aes(x =OpenPorchSF , y = SalePrice)) +
+  geom_point() + geom_smooth(method = "lm", se = FALSE)
+
+```
+
+Graphing Boxplots of the variables that highly correlated to the SalePrice
+
+```{r}
+par(mfrow=c(1, 5))
+boxplot(SalePrice~OverallQual,data=mydata,main="Different boxplots", xlab="OverallQual",ylab="SalePrice",col="red",border="orange")
+boxplot(SalePrice~FullBath,data=mydata,main="Different boxplots", xlab="view",ylab="SalePrice",col="red",border="orange")
+boxplot(SalePrice~TotRmsAbvGrd,data=mydata,main="Different boxplots", xlab="TotRmsAbvGrd",ylab="SalePrice",col="red",border="orange")
+boxplot(SalePrice~Fireplaces,data=mydata,main="Different boxplots", xlab="Fireplaces",ylab="SalePrice",col="red",border="orange")
+boxplot(SalePrice~GarageCars,data=mydata,main="Different boxplots", xlab="GarageCars",ylab="SalePrice",col="red",border="orange")
+```
+
+#### Modifying Train Data
+
+ Adding a variable that represents the age of the house to train data
+ 
+```{r}
+mydata$Sale = mydata$YrSold + mydata$MoSold/12
+mydata$Age = -(mydata$Sale - mydata$YearBuilt)
+test_data$Sale = test_data$YrSold + test_data$MoSold/12
+test_data$Age = -(test_data$Sale - test_data$YearBuilt)
+```
+
+Removing Outliers
+
+```{r}
+outliers=boxplot(mydata$SalePrice,plot=FALSE)$out
+outliers_data=mydata[which(mydata$price %in% outliers),]
+mydata1= mydata[-which(mydata$SalePrice %in% outliers),]
+```
+
+##### Modeling Train Data
+
+Creating a model based on the variables the correlated the most to Train Data
+```{r}
+model=lm(data=mydata1,SalePrice~YearBuilt+YearRemodAdd+BsmtUnfSF+TotalBsmtSF+GarageArea+LotArea+X1stFlrSF+X2ndFlrSF+WoodDeckSF+OpenPorchSF+OverallQual+TotRmsAbvGrd+Fireplaces+GarageCars)
+summary(model)
+```
+
+Detecting Influential Points and removing them
+
+```{r echo = T, results = 'hide'}
+cooksd <- cooks.distance(model)
+cooksd
+mean(cooksd)
+influential <- as.numeric(names(cooksd)[(cooksd > 4*mean(cooksd, na.rm=T))])
+influential_data=mydata1[influential, ]
+influencial_outliers=inner_join(outliers_data,influential_data)
+mydata12=rbind(mydata1,influencial_outliers)
+```
+
+Modeling the new Train Data
+
+```{r}
+model=lm(data=mydata12,SalePrice~YearBuilt+YearRemodAdd+BsmtUnfSF+TotalBsmtSF+GarageArea+LotArea+X1stFlrSF+X2ndFlrSF+WoodDeckSF+OpenPorchSF+OverallQual+TotRmsAbvGrd+Fireplaces+GarageCars)
+summary(model)
+```
+
+Accuracy of the Model
+
+```{r echo = T, results = 'hide'}
+pred=model$fitted.values
+pred
+tally_table=data.frame(actual=mydata12$SalePrice, predicted=pred)
+tally_table
+mape=mean(abs(tally_table$actual-tally_table$predicted)/tally_table$actual)
+accuracy=1-mape
+accuracy
+
+```
+Predicting Test Sale Price
+
+```{r}
+test_data_1=test_data[,c(5,7,8,12,13,28,14,15,4,29,30,24,25,27)]
+pred_test=predict(newdata=test_data_1,model)
+Id <- c(1460:2919)
+SalePrice<- c()
+for(x in 1:size){
+  SalePrice <- append(SalePrice,pred_test[[x]])
+}
+SalePrice
+df <- data.frame(Id, SalePrice) 
+df
+```
+
+Creating File containing estimated prices
+
+```{r}
+write.csv(df, "Ptaeople.csv", row.names=FALSE)
+```
+
+
